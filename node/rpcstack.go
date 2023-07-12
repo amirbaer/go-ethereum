@@ -438,20 +438,24 @@ func newVHostHandler(vhosts []string, next http.Handler) http.Handler {
 // ServeHTTP serves JSON-RPC requests over HTTP, implements http.Handler
 func (h *virtualHostHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// if r.Host is not set, we can continue serving since a browser would set the Host header
+	fmt.Printf("rpcstack (b) // r.Host=%s\n", r.Host)
 	if r.Host == "" {
 		h.next.ServeHTTP(w, r)
 		return
 	}
 	host, _, err := net.SplitHostPort(r.Host)
+	fmt.Printf("rpcstack (b) // host=%s, err=%s\n", host, err)
 	if err != nil {
 		// Either invalid (too many colons) or no port specified
 		host = r.Host
 	}
 	if ipAddr := net.ParseIP(host); ipAddr != nil {
 		// It's an IP address, we can serve that
+		fmt.Printf("rpcstack (b) // ip=%s\n", ipAddr)
 		h.next.ServeHTTP(w, r)
 		return
 	}
+	fmt.Printf("rpcstack (b) // vhosts=%+v\n", h.vhosts)
 	// Not an IP address, but a hostname. Need to validate
 	if _, exist := h.vhosts["*"]; exist {
 		h.next.ServeHTTP(w, r)
